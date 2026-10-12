@@ -68,3 +68,18 @@ def test_returns_503_without_model():
     app.state.model = None
     response = TestClient(app).post("/v1/predict-fare", json={"pulocation_id": 161, "dolocation_id": 230})
     assert response.status_code == 503
+
+
+def test_zones_endpoint(client):
+    zones = client.get("/v1/zones").json()
+    assert len(zones) == 263
+    jfk = next(z for z in zones if z["id"] == 132)
+    assert jfk["is_airport"] and jfk["borough"] == "Queens"
+    assert next(z for z in zones if z["id"] == 230)["in_congestion_zone"]
+
+
+def test_demo_page_served(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "/v1/predict-fare" in response.text

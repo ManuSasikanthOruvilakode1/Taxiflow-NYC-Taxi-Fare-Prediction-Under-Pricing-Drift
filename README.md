@@ -101,7 +101,7 @@ uv run pytest                    # 32 tests, no data needed
 bash scripts/reproduce.sh
 
 # Serve
-uv run taxiflow serve --port 8000
+uv run taxiflow serve --port 8000   # demo page: http://localhost:8000/   API docs: /docs
 curl -X POST http://localhost:8000/v1/predict-fare \
   -H "Content-Type: application/json" \
   -d '{"pulocation_id": 132, "dolocation_id": 230, "pickup_datetime": "2026-10-15T18:30:00", "booking_type": "street_hail"}'
@@ -126,7 +126,7 @@ src/taxiflow/
                seasonality.py (seasonal price index)
   models/      train.py (LightGBM, monthly correction, baselines), conformal.py (split conformal)
   evaluation/  metrics.py, walkforward.py (maintenance strategies)
-  serving/     api.py (FastAPI)
+  serving/     api.py (FastAPI), demo.html (interactive demo page at /)
   pipeline.py  train / evaluate orchestration
   resources/   zone_table.csv
 reports/                       metrics.json, walkforward.json: every reported number

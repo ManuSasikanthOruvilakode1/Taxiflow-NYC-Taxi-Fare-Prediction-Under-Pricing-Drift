@@ -5,16 +5,18 @@ import os
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime
+from importlib import resources
 from typing import Literal
 from zoneinfo import ZoneInfo
 
 import numpy as np
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from taxiflow import __version__
 from taxiflow.features.build import FEATURES, build_features
-from taxiflow.features.geospatial import N_ZONES, load_zone_table
+from taxiflow.features.geospatial import BOROUGHS, N_ZONES, load_zone_table
 from taxiflow.models.train import FareModel
 
 NYC_TZ = ZoneInfo("America/New_York")
@@ -75,6 +77,28 @@ def _nyc_local(dt: datetime | None) -> np.datetime64:
 
 def _optional(x: float) -> float | None:
     return None if math.isnan(x) else round(float(x), 2)
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def demo_page():
+    """Interactive demo page for the fare API."""
+    return resources.files("taxiflow.serving").joinpath("demo.html").read_text(encoding="utf-8")
+
+
+@app.get("/v1/zones")
+def list_zones():
+    """TLC taxi zones (1-263) with borough, airport and congestion-zone flags."""
+    zones = load_zone_table()
+    return [
+        {
+            "id": i,
+            "name": zones.name[i],
+            "borough": BOROUGHS[zones.borough[i]],
+            "is_airport": bool(zones.is_airport[i]),
+            "in_congestion_zone": bool(zones.in_cbd[i]),
+        }
+        for i in range(1, N_ZONES + 1)
+    ]
 
 
 @app.get("/health")
