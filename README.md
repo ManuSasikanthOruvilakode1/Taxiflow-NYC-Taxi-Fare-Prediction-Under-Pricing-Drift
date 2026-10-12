@@ -171,6 +171,7 @@ Taxiflow-NYC-Taxi-Fare-Prediction-Under-Pricing-Drift/
 ├── .gitignore
 ├── .python-version                 # Python 3.11
 ├── Dockerfile                      # Two-stage image serving the trained model
+├── LICENSE                         # MIT
 ├── PROJECT_EXPLANATION.md          # Design rationale, pipeline, pricing changes, uncertainty, serving
 ├── README.md
 ├── pyproject.toml                  # Dependencies (+ dev / geo / viz groups), `taxiflow` entry point, ruff, pytest
@@ -194,3 +195,7 @@ models/            # Trained models: taxiflow_lgbm.joblib (base), taxiflow_lgbm_
 - The seasonal index is estimated from metered trips; Flex Fare pricing has no stable seasonal pattern in this data.
 - Weather, events and live traffic are not used.
 - Yellow taxis only.
+
+## License
+
+[MIT](LICENSE). Trip data: NYC Taxi & Limousine Commission public trip records.
