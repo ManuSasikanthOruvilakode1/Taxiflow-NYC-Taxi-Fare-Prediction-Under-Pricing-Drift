@@ -1,0 +1,13 @@
+.venv/
+.git/
+data/
+notebooks/
+reports/
+docs/
+tests/
+scripts/
+**/__pycache__/
+.ruff_cache/
+.pytest_cache/
+models/*
+!models/taxiflow_lgbm_serving.joblib

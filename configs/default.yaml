@@ -1,0 +1,86 @@
+project:
+  name: "taxiflow"
+  version: "1.0.0"
+  seed: 42
+
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  zone_centroids_path: "data/zone_centroids.csv"
+  start_month: "2024-01"
+  end_month: "2026-08"
+  # Records excluded as corrupt (found during EDA), counted separately in the cleaning report.
+  known_bad_records:
+    - month: "2025-11"
+      vendor_id: 2
+      payment_type: 0
+      reason: "Curb Flex Fare trips report placeholder fare_amount (median $2.59 vs ~$17 for other vendor)"
+  filters:
+    min_fare: 3.00
+    max_fare: 500.00
+    min_distance_km: 0.20
+    max_distance_km: 120.00
+    min_duration_min: 1.00
+    max_duration_min: 180.00
+    min_speed_kmph: 1.00
+    max_speed_kmph: 115.00
+
+# Out-of-time split. All windows are inclusive month ranges (YYYY-MM).
+# Training starts at the current pricing regime: the Flex Fare step change on 2025-12-01
+# (the MTA congestion fee began 2025-01-05 and is also in effect throughout).
+split:
+  train: ["2025-12", "2026-04"]
+  validation: ["2026-05", "2026-05"]   # early stopping + interval-width model
+  calibration: ["2026-06", "2026-06"]  # conformal calibration only
+  test: ["2026-07", "2026-08"]
+  sample_per_month: 1000000            # rows sampled per train/validation month; test uses all rows
+
+# Drift study: the same model trained on earlier pricing regimes, scored on the same test months.
+drift_models:
+  - name: "trained_2024"               # before congestion pricing
+    train: ["2024-01", "2024-11"]
+    validation: ["2024-12", "2024-12"]
+    sample_per_month: 300000
+  - name: "trained_2025_jan_sep"       # congestion fee in effect, before the Flex Fare change
+    train: ["2025-01", "2025-09"]
+    validation: ["2025-10", "2025-10"]
+    sample_per_month: 300000
+
+# Route-controlled seasonal price index from metered trips (features/seasonality.py).
+# Fit only on months before the deployed model's validation/calibration/test months.
+seasonality:
+  enabled: true
+  fit_window: ["2024-01", "2025-11"]
+
+# Monthly maintenance strategies (static / bias correction / retrain), see evaluation/walkforward.py
+walk_forward:
+  test_months: ["2026-07", "2026-08"]
+  train_months: 4            # retrain window: months T-5 .. T-2; month T-1 for width model + calibration
+  sample_per_month: 1000000
+
+model:
+  type: "lightgbm"
+  num_boost_round: 2000
+  early_stopping_rounds: 50
+  params:
+    objective: "regression"
+    metric: "rmse"
+    learning_rate: 0.05
+    num_leaves: 255
+    min_data_in_leaf: 100
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 1
+    max_cat_to_onehot: 4
+    cat_smooth: 10
+    seed: 42
+    num_threads: -1
+    verbose: -1
+
+conformal:
+  confidence_level: 0.90
+
+serving:
+  host: "0.0.0.0"
+  port: 8000
+  model_path: "models/taxiflow_lgbm_serving.joblib"  # written by train, updated by `taxiflow correct`

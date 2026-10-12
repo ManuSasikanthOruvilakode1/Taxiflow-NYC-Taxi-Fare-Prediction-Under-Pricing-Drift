@@ -1,0 +1,29 @@
+# Environments
+.venv/
+env/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.ruff_cache/
+.pytest_cache/
+
+# Data & Models
+data/raw/
+data/processed/
+models/*.onnx
+models/*.pkl
+models/*.bin
+models/*.joblib
+
+# Logs
+runs/
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/
