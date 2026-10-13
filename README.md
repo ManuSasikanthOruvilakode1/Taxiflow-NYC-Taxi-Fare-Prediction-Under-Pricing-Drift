@@ -1,4 +1,4 @@
-# Taxiflow: NYC Taxi Fare Prediction Under Pricing Drift
+# Taxiflow: NYC Taxi Fare Prediction Under Pricing Drift 
 
 Taxiflow predicts the **upfront fare** of an NYC yellow taxi trip (everything the rider is charged except the tip) from information available at booking time, and returns a **split-conformal prediction interval** around it. It is trained and evaluated on **119.6 million TLC trip records (Jan 2024 – Aug 2026)** with a strict out-of-time split, and served through a FastAPI endpoint.
 
